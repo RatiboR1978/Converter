@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>GetCourse Clean Converter</title>
+    <style>
+      body {
+        font-family: -apple-system, sans-serif;
+        max-width: 700px;
+        margin: 30px auto;
+        padding: 20px;
+        background: #f0f2f5;
+      }
+      #editor {
+        width: 100%;
+        height: 250px;
+        border: 2px solid #ccc;
+        background: #fff;
+        padding: 15px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        outline: none;
+        box-sizing: border-box;
+      }
+      #editor:focus {
+        border-color: #3498db;
+      }
+      button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 16px;
+        width: 100%;
+        font-weight: bold;
+        transition: all 0.2s;
+      }
+      button:hover {
+        background: #2980b9;
+      }
+      #output {
+        width: 100%;
+        height: 150px;
+        margin-top: 15px;
+        display: none;
+        font-family: monospace;
+        background: #2b2b2b;
+        color: #a9ffaf;
+        padding: 10px;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+      .label {
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: block;
+        color: #444;
+      }
+    </style>
+  </head>
+  <body>
+    <span class="label">Вставьте текст из Google Docs:</span>
+    <div id="editor" contenteditable="true"></div>
+
+    <button onclick="convertText()">СКОПИРОВАТЬ КОД</button>
+
+    <textarea id="output" readonly></textarea>
+
+    <script>
+      function convertText() {
+        const editor = document.getElementById("editor");
+
+        // 1. Фиксируем стили (жирный, курсив, подчеркивание)
+        const allElements = editor.querySelectorAll("*");
+        allElements.forEach((el) => {
+          const style = window.getComputedStyle(el);
+          if (
+            style.textDecoration.includes("underline") ||
+            el.style.textDecorationLine === "underline"
+          ) {
+            el.innerHTML = "<u>" + el.innerHTML + "</u>";
+          }
+          if (style.fontWeight === "700" || style.fontWeight === "bold") {
+            el.innerHTML = "<strong>" + el.innerHTML + "</strong>";
+          }
+          if (style.fontStyle === "italic") {
+            el.innerHTML = "<em>" + el.innerHTML + "</em>";
+          }
+        });
+
+        let content = editor.innerHTML;
+
+        // 2. Базовая очистка
+        content = content.replace(/ style="[^"]*"/g, "");
+        content = content.replace(/ class="[^"]*"/g, "");
+        content = content.replace(/ id="[^"]*"/g, "");
+        content = content.replace(/<\/?span[^>]*>/g, "");
+
+        // 3. Удаляем пустые абзацы ВНУТРИ текста
+        content = content.replace(/<p><\/p>/g, "");
+        content = content.replace(/<p>&nbsp;<\/p>/g, "");
+
+        // 4. Формируем абзацы с отступом
+        content = content.replace(/<p>/g, '<p style="margin: 0 0 10px 0;">');
+
+        // 5. ГЛАВНОЕ: Удаляем лишние переносы и пустые теги в самом конце
+        content = content.trim();
+        content = content.replace(
+          /(<p style="margin: 0 0 10px 0;">(&nbsp;|\s)*<\/p>| <br>|<br\/>)+$/gi,
+          "",
+        );
+
+        let finalCode = `<div>\n${content}\n</div>`;
+
+        const output = document.getElementById("output");
+        output.value = finalCode;
+        output.style.display = "block";
+
+        output.select();
+        document.execCommand("copy");
+
+        const btn = document.querySelector("button");
+        btn.innerText = "ГОТОВО! ЛИШНЕЕ УДАЛЕНО";
+        btn.style.background = "#27ae60";
+
+        setTimeout(() => {
+          btn.innerText = "СКОПИРОВАТЬ КОД";
+          btn.style.background = "#3498db";
+        }, 1500);
+      }
+    </script>
+  </body>
+</html>
