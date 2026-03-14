@@ -2,7 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <title>GetCourse Multi-Converter</title>
+    <title>GetCourse Converter</title>
     <style>
       body {
         font-family: -apple-system, sans-serif;
@@ -24,17 +24,12 @@
         text-transform: uppercase;
         letter-spacing: 1px;
         text-align: center;
-      }
-      .email-title {
-        color: #3498db;
-      }
-      .tg-title {
         color: #0088cc;
       }
 
       .editor {
         width: 100%;
-        height: 200px;
+        height: 300px;
         border: 2px solid #ccc;
         background: #fff;
         padding: 15px;
@@ -45,7 +40,7 @@
         box-sizing: border-box;
       }
       .editor:focus {
-        border-color: #3498db;
+        border-color: #0088cc;
       }
 
       button {
@@ -59,16 +54,10 @@
         font-weight: bold;
         transition: 0.2s;
       }
-      .btn-email {
-        background: #3498db;
-      }
-      .btn-email:hover {
-        background: #2980b9;
-      }
-      .btn-tg {
+      .btn-convert {
         background: #0088cc;
       }
-      .btn-tg:hover {
+      .btn-convert:hover {
         background: #0077b5;
       }
       .btn-clear {
@@ -81,7 +70,7 @@
 
       .output {
         width: 100%;
-        height: 200px;
+        height: 250px;
         margin-top: 15px;
         display: none;
         font-family: monospace;
@@ -102,78 +91,27 @@
   </head>
   <body>
     <div class="converter-section">
-      <h2 class="email-title">Конвертер для Email</h2>
+      <h2>Конвертер</h2>
       <span class="label">Вставьте текст из Google Docs:</span>
-      <div id="editorEmail" class="editor" contenteditable="true"></div>
-      <button class="btn-email" onclick="processEmail()">
-        СКОПИРОВАТЬ КОД ДЛЯ EMAIL
+      <div id="editor" class="editor" contenteditable="true"></div>
+      <button class="btn-convert" onclick="process()">
+        СКОПИРОВАТЬ КОД
       </button>
-      <textarea id="outputEmail" class="output" readonly></textarea>
-    </div>
-
-    <div class="converter-section">
-      <h2 class="tg-title">Конвертер для Telegram</h2>
-      <span class="label">Вставьте текст из Google Docs:</span>
-      <div id="editorTG" class="editor" contenteditable="true"></div>
-      <button class="btn-tg" onclick="processTG()">
-        СКОПИРОВАТЬ КОД ДЛЯ TELEGRAM
-      </button>
-      <textarea id="outputTG" class="output" readonly></textarea>
+      <textarea id="output" class="output" readonly></textarea>
       <button class="btn-clear" onclick="clearAll()">ОЧИСТИТЬ ВСЁ</button>
     </div>
 
     <script>
       function clearAll() {
         if (confirm("Вы уверены, что хотите очистить все поля?")) {
-          document.getElementById("editorEmail").innerHTML = "";
-          document.getElementById("editorTG").innerHTML = "";
-          document.getElementById("outputEmail").value = "";
-          document.getElementById("outputTG").value = "";
-          document.getElementById("outputEmail").style.display = "none";
-          document.getElementById("outputTG").style.display = "none";
+          document.getElementById("editor").innerHTML = "";
+          document.getElementById("output").value = "";
+          document.getElementById("output").style.display = "none";
         }
       }
 
-      // --- ЛОГИКА EMAIL ---
-      function processEmail() {
-        const editor = document.getElementById("editorEmail");
-        const allElements = editor.querySelectorAll("*");
-
-        allElements.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          if (style.textDecoration.includes("underline")) {
-            el.innerHTML = "<u>" + el.innerHTML + "</u>";
-          }
-          if (style.fontWeight === "700" || style.fontWeight === "bold") {
-            el.innerHTML = "<strong>" + el.innerHTML + "</strong>";
-          }
-          if (style.fontStyle === "italic") {
-            el.innerHTML = "<em>" + el.innerHTML + "</em>";
-          }
-        });
-
-        let content = editor.innerHTML;
-        content = content.replace(/ style="[^"]*"/g, "");
-        content = content.replace(/ class="[^"]*"/g, "");
-        content = content.replace(/ id="[^"]*"/g, "");
-        content = content.replace(/<\/?span[^>]*>/g, "");
-        content = content.replace(/<p><\/p>/g, "");
-        content = content.replace(/<p>&nbsp;<\/p>/g, "");
-        content = content.replace(/<p>/g, '<p style="margin: 0 0 10px 0;">');
-        content = content.trim();
-        content = content.replace(/(<p style="margin: 0 0 10px 0;">(&nbsp;|\s)*<\/p>| <br>|<br\/>)+$/gi, "");
-
-        const finalCode = `<div style="line-height: 1.5;">\n${content}\n</div>`;
-        const output = document.getElementById("outputEmail");
-        output.value = finalCode;
-        output.style.display = "block";
-        output.select();
-        document.execCommand("copy");
-      }
-
-      // --- ЛОГИКА TELEGRAM ---
-      function processTG() {
-        const editor = document.getElementById("editorTG");
+      function process() {
+        const editor = document.getElementById("editor");
         
         const tempContainer = document.createElement("div");
         tempContainer.innerHTML = editor.innerHTML;
@@ -266,12 +204,11 @@
         }
 
         document.body.removeChild(tempContainer);
-        const output = document.getElementById("outputTG");
+        const output = document.getElementById("output");
         output.value = finalResult.join("\n");
         output.style.display = "block";
         output.select();
         document.execCommand("copy");
-      }
-    </script>
+      }    </script>
   </body>
 </html>
