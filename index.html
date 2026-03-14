@@ -71,6 +71,13 @@
       .btn-tg:hover {
         background: #0077b5;
       }
+      .btn-clear {
+        background: #e74c3c;
+        margin-top: 10px;
+      }
+      .btn-clear:hover {
+        background: #c0392b;
+      }
 
       .output {
         width: 100%;
@@ -112,9 +119,21 @@
         СКОПИРОВАТЬ КОД ДЛЯ TELEGRAM
       </button>
       <textarea id="outputTG" class="output" readonly></textarea>
+      <button class="btn-clear" onclick="clearAll()">ОЧИСТИТЬ ВСЁ</button>
     </div>
 
     <script>
+      function clearAll() {
+        if (confirm("Вы уверены, что хотите очистить все поля?")) {
+          document.getElementById("editorEmail").innerHTML = "";
+          document.getElementById("editorTG").innerHTML = "";
+          document.getElementById("outputEmail").value = "";
+          document.getElementById("outputTG").value = "";
+          document.getElementById("outputEmail").style.display = "none";
+          document.getElementById("outputTG").style.display = "none";
+        }
+      }
+
       // --- ЛОГИКА EMAIL ---
       function processEmail() {
         const editor = document.getElementById("editorEmail");
@@ -150,7 +169,6 @@
         output.style.display = "block";
         output.select();
         document.execCommand("copy");
-        alert("Email код скопирован!");
       }
 
       // --- ЛОГИКА TELEGRAM ---
@@ -167,14 +185,11 @@
         const allNodes = Array.from(tempContainer.querySelectorAll("*"));
         allNodes.forEach((el) => {
           const style = window.getComputedStyle(el);
-          
-          // Распознаем ссылку по тегу или по визуальным признакам Google Docs
           const isLinkColor = style.color === "rgb(17, 85, 204)" || style.color === "rgb(5, 99, 193)";
           const hasUnderline = style.textDecoration.includes("underline");
           
           if (el.tagName === "A") {
             let href = el.getAttribute("href");
-            // Очистка редиректов Google
             if (href && href.includes("google.com/url?q=")) {
               const urlParams = new URLSearchParams(href.split('?')[1]);
               href = urlParams.get('q') || href;
@@ -184,7 +199,6 @@
           } else if (isLinkColor && hasUnderline && el.innerText.trim().length > 3) {
             if (!el.closest("a") && !el.querySelector("a")) {
               const text = el.innerText.trim();
-              // Если это похоже на URL или мы уверены по стилю
               const link = document.createElement("a");
               link.href = text.startsWith("http") ? text : "#";
               link.innerHTML = el.innerHTML;
@@ -196,13 +210,8 @@
           const isBold = style.fontWeight === "700" || style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700;
           const isItalic = style.fontStyle === "italic";
 
-          if (isBold && !el.querySelector("b") && el.tagName !== "B") {
-            el.innerHTML = "<b>" + el.innerHTML + "</b>";
-          }
-          if (isItalic && !el.querySelector("i") && el.tagName !== "I") {
-            el.innerHTML = "<i>" + el.innerHTML + "</i>";
-          }
-          // Подчеркивание для обычного текста (не ссылок)
+          if (isBold && !el.querySelector("b") && el.tagName !== "B") el.innerHTML = "<b>" + el.innerHTML + "</b>";
+          if (isItalic && !el.querySelector("i") && el.tagName !== "I") el.innerHTML = "<i>" + el.innerHTML + "</i>";
           if (hasUnderline && !el.querySelector("u") && el.tagName !== "U" && el.tagName !== "A" && !el.closest("a")) {
             el.innerHTML = "<u>" + el.innerHTML + "</u>";
           }
@@ -215,14 +224,10 @@
         blocks.forEach((block) => {
           if (block.parentElement !== tempContainer && ["P", "LI", "DIV"].includes(block.parentElement.tagName)) return;
 
-          // Финальная очистка ссылок внутри блока
           block.querySelectorAll("a").forEach(a => {
             let href = a.getAttribute("href");
             if (href && href.includes("google.com/url?q=")) {
-                try {
-                    const url = new URL(href);
-                    href = url.searchParams.get("q") || href;
-                } catch(e) {}
+                try { const url = new URL(href); href = url.searchParams.get("q") || href; } catch(e) {}
             }
             while (a.attributes.length > 0) a.removeAttribute(a.attributes[0].name);
             a.setAttribute("href", href);
@@ -242,14 +247,22 @@
 
           if (cleanText !== "" && html !== "<br>") {
             if (block.tagName === "LI") html = "• " + html;
-            resultArr.push("<p>" + html + "</p>");
+            resultArr.push({
+              html: "<p>" + html + "</p>",
+              isStep: /Шаг\s*\d+/i.test(cleanText) || block.tagName === "LI"
+            });
           }
         });
 
+        // 3. Сборка с умными разделителями
         let finalResult = [];
         for (let i = 0; i < resultArr.length; i++) {
-          finalResult.push(resultArr[i]);
-          if (i < resultArr.length - 1) finalResult.push("<p>&nbsp;</p>");
+          finalResult.push(resultArr[i].html);
+          if (i < resultArr.length - 1) {
+            const currentIsStep = resultArr[i].isStep;
+            const nextIsStep = resultArr[i+1].isStep;
+            if (!(currentIsStep && nextIsStep)) finalResult.push("<p>&nbsp;</p>");
+          }
         }
 
         document.body.removeChild(tempContainer);
@@ -258,7 +271,6 @@
         output.style.display = "block";
         output.select();
         document.execCommand("copy");
-        alert("Telegram код скопирован!");
       }
     </script>
   </body>
