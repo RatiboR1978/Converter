@@ -2,18 +2,39 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <title>GetCourse Clean Converter</title>
+    <title>GetCourse Multi-Converter</title>
     <style>
       body {
         font-family: -apple-system, sans-serif;
-        max-width: 700px;
+        max-width: 800px;
         margin: 30px auto;
         padding: 20px;
         background: #f0f2f5;
       }
-      #editor {
+      .converter-section {
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 40px;
+        border: 1px solid #e1e4e8;
+      }
+      h2 {
+        margin-top: 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+      }
+      .email-title {
+        color: #3498db;
+      }
+      .tg-title {
+        color: #0088cc;
+      }
+
+      .editor {
         width: 100%;
-        height: 250px;
+        height: 200px;
         border: 2px solid #ccc;
         background: #fff;
         padding: 15px;
@@ -23,27 +44,37 @@
         outline: none;
         box-sizing: border-box;
       }
-      #editor:focus {
+      .editor:focus {
         border-color: #3498db;
       }
+
       button {
-        background: #3498db;
         color: white;
         border: none;
         padding: 15px;
         cursor: pointer;
-        border-radius: 5px;
+        border-radius: 6px;
         font-size: 16px;
         width: 100%;
         font-weight: bold;
-        transition: all 0.2s;
+        transition: 0.2s;
       }
-      button:hover {
+      .btn-email {
+        background: #3498db;
+      }
+      .btn-email:hover {
         background: #2980b9;
       }
-      #output {
+      .btn-tg {
+        background: #0088cc;
+      }
+      .btn-tg:hover {
+        background: #0077b5;
+      }
+
+      .output {
         width: 100%;
-        height: 150px;
+        height: 200px;
         margin-top: 15px;
         display: none;
         font-family: monospace;
@@ -52,35 +83,46 @@
         padding: 10px;
         border-radius: 5px;
         box-sizing: border-box;
+        white-space: pre-wrap;
       }
       .label {
         font-weight: bold;
         margin-bottom: 8px;
         display: block;
-        color: #444;
+        color: #555;
       }
     </style>
   </head>
   <body>
-    <span class="label">Вставьте текст из Google Docs:</span>
-    <div id="editor" contenteditable="true"></div>
+    <div class="converter-section">
+      <h2 class="email-title">Конвертер для Email</h2>
+      <span class="label">Вставьте текст из Google Docs:</span>
+      <div id="editorEmail" class="editor" contenteditable="true"></div>
+      <button class="btn-email" onclick="processEmail()">
+        СКОПИРОВАТЬ КОД ДЛЯ EMAIL
+      </button>
+      <textarea id="outputEmail" class="output" readonly></textarea>
+    </div>
 
-    <button onclick="convertText()">СКОПИРОВАТЬ КОД</button>
-
-    <textarea id="output" readonly></textarea>
+    <div class="converter-section">
+      <h2 class="tg-title">Конвертер для Telegram</h2>
+      <span class="label">Вставьте текст из Google Docs:</span>
+      <div id="editorTG" class="editor" contenteditable="true"></div>
+      <button class="btn-tg" onclick="processTG()">
+        СКОПИРОВАТЬ КОД ДЛЯ TELEGRAM
+      </button>
+      <textarea id="outputTG" class="output" readonly></textarea>
+    </div>
 
     <script>
-      function convertText() {
-        const editor = document.getElementById("editor");
-
-        // 1. Фиксируем стили (жирный, курсив, подчеркивание)
+      // --- ЛОГИКА EMAIL ---
+      function processEmail() {
+        const editor = document.getElementById("editorEmail");
         const allElements = editor.querySelectorAll("*");
+
         allElements.forEach((el) => {
           const style = window.getComputedStyle(el);
-          if (
-            style.textDecoration.includes("underline") ||
-            el.style.textDecorationLine === "underline"
-          ) {
+          if (style.textDecoration.includes("underline")) {
             el.innerHTML = "<u>" + el.innerHTML + "</u>";
           }
           if (style.fontWeight === "700" || style.fontWeight === "bold") {
@@ -92,44 +134,131 @@
         });
 
         let content = editor.innerHTML;
-
-        // 2. Базовая очистка
         content = content.replace(/ style="[^"]*"/g, "");
         content = content.replace(/ class="[^"]*"/g, "");
         content = content.replace(/ id="[^"]*"/g, "");
         content = content.replace(/<\/?span[^>]*>/g, "");
-
-        // 3. Удаляем пустые абзацы ВНУТРИ текста
         content = content.replace(/<p><\/p>/g, "");
         content = content.replace(/<p>&nbsp;<\/p>/g, "");
-
-        // 4. Формируем абзацы с отступом
         content = content.replace(/<p>/g, '<p style="margin: 0 0 10px 0;">');
-
-        // 5. ГЛАВНОЕ: Удаляем лишние переносы и пустые теги в самом конце
         content = content.trim();
-        content = content.replace(
-          /(<p style="margin: 0 0 10px 0;">(&nbsp;|\s)*<\/p>| <br>|<br\/>)+$/gi,
-          "",
-        );
+        content = content.replace(/(<p style="margin: 0 0 10px 0;">(&nbsp;|\s)*<\/p>| <br>|<br\/>)+$/gi, "");
 
-        let finalCode = `<div>\n${content}\n</div>`;
-
-        const output = document.getElementById("output");
+        const finalCode = `<div style="line-height: 1.5;">\n${content}\n</div>`;
+        const output = document.getElementById("outputEmail");
         output.value = finalCode;
         output.style.display = "block";
-
         output.select();
         document.execCommand("copy");
+        alert("Email код скопирован!");
+      }
 
-        const btn = document.querySelector("button");
-        btn.innerText = "ГОТОВО! ЛИШНЕЕ УДАЛЕНО";
-        btn.style.background = "#27ae60";
+      // --- ЛОГИКА TELEGRAM ---
+      function processTG() {
+        const editor = document.getElementById("editorTG");
+        
+        const tempContainer = document.createElement("div");
+        tempContainer.innerHTML = editor.innerHTML;
+        tempContainer.style.position = "fixed";
+        tempContainer.style.left = "-9999px";
+        document.body.appendChild(tempContainer);
 
-        setTimeout(() => {
-          btn.innerText = "СКОПИРОВАТЬ КОД";
-          btn.style.background = "#3498db";
-        }, 1500);
+        // 1. Распознаем стили и ссылки
+        const allNodes = Array.from(tempContainer.querySelectorAll("*"));
+        allNodes.forEach((el) => {
+          const style = window.getComputedStyle(el);
+          
+          // Распознаем ссылку по тегу или по визуальным признакам Google Docs
+          const isLinkColor = style.color === "rgb(17, 85, 204)" || style.color === "rgb(5, 99, 193)";
+          const hasUnderline = style.textDecoration.includes("underline");
+          
+          if (el.tagName === "A") {
+            let href = el.getAttribute("href");
+            // Очистка редиректов Google
+            if (href && href.includes("google.com/url?q=")) {
+              const urlParams = new URLSearchParams(href.split('?')[1]);
+              href = urlParams.get('q') || href;
+            }
+            while (el.attributes.length > 0) el.removeAttribute(el.attributes[0].name);
+            el.setAttribute("href", href);
+          } else if (isLinkColor && hasUnderline && el.innerText.trim().length > 3) {
+            if (!el.closest("a") && !el.querySelector("a")) {
+              const text = el.innerText.trim();
+              // Если это похоже на URL или мы уверены по стилю
+              const link = document.createElement("a");
+              link.href = text.startsWith("http") ? text : "#";
+              link.innerHTML = el.innerHTML;
+              el.innerHTML = "";
+              el.appendChild(link);
+            }
+          }
+
+          const isBold = style.fontWeight === "700" || style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700;
+          const isItalic = style.fontStyle === "italic";
+
+          if (isBold && !el.querySelector("b") && el.tagName !== "B") {
+            el.innerHTML = "<b>" + el.innerHTML + "</b>";
+          }
+          if (isItalic && !el.querySelector("i") && el.tagName !== "I") {
+            el.innerHTML = "<i>" + el.innerHTML + "</i>";
+          }
+          // Подчеркивание для обычного текста (не ссылок)
+          if (hasUnderline && !el.querySelector("u") && el.tagName !== "U" && el.tagName !== "A" && !el.closest("a")) {
+            el.innerHTML = "<u>" + el.innerHTML + "</u>";
+          }
+        });
+
+        // 2. Сборка блоков
+        const blocks = Array.from(tempContainer.querySelectorAll("p, li, h1, h2, h3, div"));
+        let resultArr = [];
+
+        blocks.forEach((block) => {
+          if (block.parentElement !== tempContainer && ["P", "LI", "DIV"].includes(block.parentElement.tagName)) return;
+
+          // Финальная очистка ссылок внутри блока
+          block.querySelectorAll("a").forEach(a => {
+            let href = a.getAttribute("href");
+            if (href && href.includes("google.com/url?q=")) {
+                try {
+                    const url = new URL(href);
+                    href = url.searchParams.get("q") || href;
+                } catch(e) {}
+            }
+            while (a.attributes.length > 0) a.removeAttribute(a.attributes[0].name);
+            a.setAttribute("href", href);
+          });
+
+          let html = block.innerHTML
+            .replace(/ style="[^"]*"/g, "")
+            .replace(/ class="[^"]*"/g, "")
+            .replace(/ id="[^"]*"/g, "")
+            .replace(/ dir="[^"]*"/g, "")
+            .replace(/<\/?span[^>]*>/g, "")
+            .replace(/&nbsp;/g, " ")
+            .trim();
+
+          html = html.replace(/<b>\s*<\/b>/g, "").replace(/<u>\s*<\/u>/g, "").replace(/<i>\s*<\/i>/g, "");
+          const cleanText = html.replace(/<\/?[^>]+(>|$)/g, "").trim();
+
+          if (cleanText !== "" && html !== "<br>") {
+            if (block.tagName === "LI") html = "• " + html;
+            resultArr.push("<p>" + html + "</p>");
+          }
+        });
+
+        let finalResult = [];
+        for (let i = 0; i < resultArr.length; i++) {
+          finalResult.push(resultArr[i]);
+          if (i < resultArr.length - 1) finalResult.push("<p>&nbsp;</p>");
+        }
+
+        document.body.removeChild(tempContainer);
+        const output = document.getElementById("outputTG");
+        output.value = finalResult.join("\n");
+        output.style.display = "block";
+        output.select();
+        document.execCommand("copy");
+        alert("Telegram код скопирован!");
       }
     </script>
   </body>
