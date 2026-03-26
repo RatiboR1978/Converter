@@ -2,281 +2,538 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <title>GetCourse Multi-Converter</title>
+    <title>GetCourse Converter</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Unbounded:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --bg: #0e0f14;
+        --surface: #16181f;
+        --surface2: #1e2029;
+        --border: #2a2d3a;
+        --email: #4f8ef7;
+        --email-dim: #1e2d4a;
+        --tg: #29b6f6;
+        --tg-dim: #0d2535;
+        --danger: #f7604f;
+        --text: #e8eaf0;
+        --muted: #6b7280;
+        --code-bg: #0a0b0f;
+        --code-text: #7effa0;
+        --success: #4ade80;
+      }
       body {
-        font-family: -apple-system, sans-serif;
-        max-width: 800px;
-        margin: 30px auto;
-        padding: 20px;
-        background: #f0f2f5;
+        font-family: "JetBrains Mono", monospace;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        padding: 40px 20px;
       }
-      .converter-section {
-        background: #fff;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        margin-bottom: 40px;
-        border: 1px solid #e1e4e8;
-      }
-      h2 {
-        margin-top: 0;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+      .page-header {
         text-align: center;
+        margin-bottom: 48px;
       }
-      .email-title {
-        color: #3498db;
+      .page-header h1 {
+        font-family: "Unbounded", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        text-transform: uppercase;
       }
-      .tg-title {
-        color: #0088cc;
+      .page-header p {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 8px;
+        letter-spacing: 1px;
       }
-
-      .editor {
-        width: 100%;
-        height: 200px;
-        border: 2px solid #ccc;
-        background: #fff;
-        padding: 15px;
-        overflow-y: auto;
-        margin-bottom: 15px;
-        border-radius: 8px;
-        outline: none;
-        box-sizing: border-box;
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
       }
-      .editor:focus {
-        border-color: #3498db;
+      @media (max-width: 800px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
       }
-
-      button {
-        color: white;
-        border: none;
-        padding: 15px;
-        cursor: pointer;
-        border-radius: 6px;
-        font-size: 16px;
-        width: 100%;
-        font-weight: bold;
-        transition: 0.2s;
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
       }
-      .btn-email {
-        background: #3498db;
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
       }
-      .btn-email:hover {
-        background: #2980b9;
+      .card-header .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
       }
-      .btn-tg {
-        background: #0088cc;
+      .card-email .dot {
+        background: var(--email);
+        box-shadow: 0 0 8px var(--email);
       }
-      .btn-tg:hover {
-        background: #0077b5;
+      .card-tg .dot {
+        background: var(--tg);
+        box-shadow: 0 0 8px var(--tg);
       }
-      .btn-clear {
-        background: #e74c3c;
-        margin-top: 10px;
+      .card-header h2 {
+        font-family: "Unbounded", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
       }
-      .btn-clear:hover {
-        background: #c0392b;
+      .card-email h2 {
+        color: var(--email);
       }
-
-      .output {
-        width: 100%;
-        height: 200px;
-        margin-top: 15px;
-        display: none;
-        font-family: monospace;
-        background: #2b2b2b;
-        color: #a9ffaf;
-        padding: 10px;
-        border-radius: 5px;
-        box-sizing: border-box;
-        white-space: pre-wrap;
+      .card-tg h2 {
+        color: var(--tg);
+      }
+      .card-body {
+        padding: 20px;
       }
       .label {
-        font-weight: bold;
+        font-size: 10px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--muted);
         margin-bottom: 8px;
         display: block;
-        color: #555;
+      }
+      .editor {
+        width: 100%;
+        min-height: 200px;
+        max-height: 280px;
+        background: #afb2c1;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        overflow-y: auto;
+        outline: none;
+        font-size: 13px;
+        line-height: 1.6;
+        color: #ffffff;
+        transition: border-color 0.2s;
+        margin-bottom: 14px;
+      }
+      .editor:focus {
+        border-color: var(--email);
+      }
+      .card-tg .editor:focus {
+        border-color: var(--tg);
+      }
+      .editor:empty::before {
+        content: attr(data-placeholder);
+        color: var(--muted);
+        pointer-events: none;
+      }
+      .btn {
+        width: 100%;
+        padding: 13px 20px;
+        border: none;
+        border-radius: 10px;
+        font-family: "Unbounded", sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-email {
+        background: var(--email-dim);
+        color: var(--email);
+        border: 1px solid var(--email);
+      }
+      .btn-email:hover {
+        background: var(--email);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(79, 142, 247, 0.3);
+      }
+      .btn-tg {
+        background: var(--tg-dim);
+        color: var(--tg);
+        border: 1px solid var(--tg);
+      }
+      .btn-tg:hover {
+        background: var(--tg);
+        color: #fff;
+        box-shadow: 0 0 20px rgba(41, 182, 246, 0.3);
+      }
+      .btn-clear {
+        background: transparent;
+        color: var(--danger);
+        border: 1px solid var(--danger);
+        margin-top: 10px;
+        opacity: 0.7;
+      }
+      .btn-clear:hover {
+        background: var(--danger);
+        color: #fff;
+        opacity: 1;
+      }
+      .output-wrap {
+        margin-top: 14px;
+        display: none;
+      }
+      .output-wrap.visible {
+        display: block;
+      }
+      .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .copy-status {
+        font-size: 10px;
+        letter-spacing: 1px;
+        color: var(--success);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .copy-status.show {
+        opacity: 1;
+      }
+      textarea.output {
+        width: 100%;
+        height: 200px;
+        background: var(--code-bg);
+        color: var(--code-text);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 11px;
+        line-height: 1.6;
+        resize: vertical;
+        outline: none;
+        white-space: pre-wrap;
+      }
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 20px 0;
       }
     </style>
   </head>
   <body>
-    <div class="converter-section">
-      <h2 class="email-title">Конвертер для Email</h2>
-      <span class="label">Вставьте текст из Google Docs:</span>
-      <div id="editorEmail" class="editor" contenteditable="true"></div>
-      <button class="btn-email" onclick="processEmail()">
-        СКОПИРОВАТЬ КОД ДЛЯ EMAIL
-      </button>
-      <textarea id="outputEmail" class="output" readonly></textarea>
+    <div class="page-header">
+      <h1>GetCourse Converter</h1>
+      <p>Google Docs → Email &amp; Telegram HTML</p>
     </div>
-
-    <div class="converter-section">
-      <h2 class="tg-title">Конвертер для Telegram</h2>
-      <span class="label">Вставьте текст из Google Docs:</span>
-      <div id="editorTG" class="editor" contenteditable="true"></div>
-      <button class="btn-tg" onclick="processTG()">
-        СКОПИРОВАТЬ КОД ДЛЯ TELEGRAM
-      </button>
-      <textarea id="outputTG" class="output" readonly></textarea>
-      <button class="btn-clear" onclick="clearAll()">ОЧИСТИТЬ ВСЁ</button>
+    <div class="grid">
+      <div class="card card-email">
+        <div class="card-header">
+          <span class="dot"></span>
+          <h2>Email (GetCourse)</h2>
+        </div>
+        <div class="card-body">
+          <span class="label">Вставьте текст из Google Docs</span>
+          <div
+            id="editorEmail"
+            class="editor"
+            contenteditable="true"
+            data-placeholder="Ctrl+V — вставить из Google Docs..."
+          ></div>
+          <button class="btn btn-email" onclick="processEmail()">
+            Скопировать код для Email
+          </button>
+          <div class="output-wrap" id="wrapEmail">
+            <div class="output-header">
+              <span class="label" style="margin: 0">Результат</span>
+              <span class="copy-status" id="statusEmail">✓ скопировано</span>
+            </div>
+            <textarea class="output" id="outputEmail" readonly></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card card-tg">
+        <div class="card-header">
+          <span class="dot"></span>
+          <h2>Telegram</h2>
+        </div>
+        <div class="card-body">
+          <span class="label">Вставьте текст из Google Docs</span>
+          <div
+            id="editorTG"
+            class="editor"
+            contenteditable="true"
+            data-placeholder="Ctrl+V — вставить из Google Docs..."
+          ></div>
+          <button class="btn btn-tg" onclick="processTG()">
+            Скопировать код для Telegram
+          </button>
+          <div class="output-wrap" id="wrapTG">
+            <div class="output-header">
+              <span class="label" style="margin: 0">Результат</span>
+              <span class="copy-status" id="statusTG">✓ скопировано</span>
+            </div>
+            <textarea class="output" id="outputTG" readonly></textarea>
+          </div>
+          <div class="divider"></div>
+          <button class="btn btn-clear" onclick="clearAll()">
+            Очистить всё
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
-      function clearAll() {
-        if (confirm("Вы уверены, что хотите очистить все поля?")) {
-          document.getElementById("editorEmail").innerHTML = "";
-          document.getElementById("editorTG").innerHTML = "";
-          document.getElementById("outputEmail").value = "";
-          document.getElementById("outputTG").value = "";
-          document.getElementById("outputEmail").style.display = "none";
-          document.getElementById("outputTG").style.display = "none";
+      // ── ВСТАВКА: перехватываем paste ──────────────────────────────────────────────
+      function setupPaste(id) {
+        document.getElementById(id).addEventListener("paste", function (e) {
+          e.preventDefault();
+          var html = e.clipboardData.getData("text/html");
+          if (html) {
+            this.innerHTML = html;
+          } else {
+            var text = e.clipboardData.getData("text/plain");
+            this.innerHTML = text
+              .split("\n")
+              .map(function (l) {
+                return l.trim() ? "<p>" + l + "</p>" : "<p><br></p>";
+              })
+              .join("");
+          }
+        });
+      }
+      document.addEventListener("DOMContentLoaded", function () {
+        setupPaste("editorEmail");
+        setupPaste("editorTG");
+      });
+
+      // ── УТИЛИТЫ ───────────────────────────────────────────────────────────────────
+      function cleanHref(href) {
+        if (!href) return "#";
+        try {
+          if (href.indexOf("google.com/url") !== -1) {
+            var u = new URL(href);
+            return u.searchParams.get("q") || href;
+          }
+        } catch (e) {}
+        return href;
+      }
+
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e) {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.left = "-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
         }
       }
 
-      // --- ЛОГИКА EMAIL ---
+      function showStatus(id) {
+        var el = document.getElementById(id);
+        el.classList.add("show");
+        setTimeout(function () {
+          el.classList.remove("show");
+        }, 2000);
+      }
+
+      function inLink(el) {
+        var n = el;
+        while (n) {
+          if (n.tagName === "A") return true;
+          n = n.parentElement;
+        }
+        return false;
+      }
+
+      function getFmt(el) {
+        var s = el && el.getAttribute ? el.getAttribute("style") || "" : "";
+        return {
+          bold: /font-weight\s*:\s*(bold|[789]\d{2})/i.test(s),
+          italic: /font-style\s*:\s*italic/i.test(s),
+          underline: /text-decoration[^;]*underline/i.test(s),
+        };
+      }
+
+      // ── КОНВЕРТАЦИЯ УЗЛА В HTML ───────────────────────────────────────────────────
+      function toHtml(node, inh) {
+        // Текстовый узел
+        if (node.nodeType === 3) {
+          var t = node.textContent.replace(/\u00A0/g, " ");
+          if (!t) return "";
+          if (!inLink(node.parentElement))
+            t = t.replace(/(https?:\/\/[^\s<>"]+)/g, '<a href="$1">$1</a>');
+          return t;
+        }
+        if (node.nodeType !== 1) return "";
+        var tag = node.tagName.toUpperCase();
+        if (
+          tag === "STYLE" ||
+          tag === "SCRIPT" ||
+          tag === "META" ||
+          tag === "LINK"
+        )
+          return "";
+        if (tag === "BR") return "";
+
+        // Ссылка
+        if (tag === "A") {
+          var href = cleanHref(node.getAttribute("href"));
+          var inner = childHtml(node, inh);
+          return inner.trim() ? '<a href="' + href + '">' + inner + "</a>" : "";
+        }
+
+        var f = getFmt(node);
+        var bold = f.bold || inh.bold || tag === "B" || tag === "STRONG";
+        var ital = f.italic || inh.italic || tag === "I" || tag === "EM";
+        var undr = f.underline || inh.underline || tag === "U";
+
+        var res = childHtml(node, {
+          bold: bold,
+          italic: ital,
+          underline: undr,
+        });
+        if (!res.trim()) return "";
+        if (undr && !inh.underline && !inLink(node)) res = "<u>" + res + "</u>";
+        if (ital && !inh.italic) res = "<i>" + res + "</i>";
+        if (bold && !inh.bold) res = "<b>" + res + "</b>";
+        return res;
+      }
+
+      function childHtml(node, fmt) {
+        var r = "";
+        for (var i = 0; i < node.childNodes.length; i++)
+          r += toHtml(node.childNodes[i], fmt);
+        return r;
+      }
+
+      var NO_FMT = { bold: false, italic: false, underline: false };
+
+      // ── ПОЛУЧИТЬ МАССИВ АБЗАЦЕВ ───────────────────────────────────────────────────
+      function getParagraphs(editorEl) {
+        var clone = editorEl.cloneNode(true);
+        var result = [];
+
+        // Берём все <p> на любом уровне вложенности
+        var pList = clone.querySelectorAll("p");
+
+        if (pList.length > 0) {
+          for (var i = 0; i < pList.length; i++) {
+            var html = childHtml(pList[i], NO_FMT).trim();
+            if (
+              !html ||
+              html === "&nbsp;" ||
+              html === "\u00A0" ||
+              html === "<br>"
+            ) {
+              result.push(null);
+            } else {
+              result.push(html);
+            }
+          }
+        } else {
+          // Fallback: нет <p> — разбиваем по <br>
+          var cur = "";
+          for (var j = 0; j < clone.childNodes.length; j++) {
+            var n = clone.childNodes[j];
+            if (n.nodeType === 1 && n.tagName === "BR") {
+              result.push(cur.trim() || null);
+              cur = "";
+            } else {
+              cur += toHtml(n, NO_FMT);
+            }
+          }
+          if (cur.trim()) result.push(cur.trim());
+        }
+
+        // Убрать null по краям
+        while (result.length && result[0] === null) result.shift();
+        while (result.length && result[result.length - 1] === null)
+          result.pop();
+        return result;
+      }
+
+      // ── EMAIL ─────────────────────────────────────────────────────────────────────
       function processEmail() {
-        const editor = document.getElementById("editorEmail");
-        
-        const tempContainer = document.createElement("div");
-        tempContainer.innerHTML = editor.innerHTML;
-        tempContainer.style.position = "fixed";
-        tempContainer.style.left = "-9999px";
-        document.body.appendChild(tempContainer);
+        var paras = getParagraphs(document.getElementById("editorEmail"));
+        if (!paras.length) return;
 
-        const allElements = tempContainer.querySelectorAll("*");
-        allElements.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          if (style.textDecoration.includes("underline")) {
-            el.innerHTML = "<u>" + el.innerHTML + "</u>";
-          }
-          if (style.fontWeight === "700" || style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700) {
-            el.innerHTML = "<strong>" + el.innerHTML + "</strong>";
-          }
-          if (style.fontStyle === "italic") {
-            el.innerHTML = "<em>" + el.innerHTML + "</em>";
-          }
-        });
-
-        let content = tempContainer.innerHTML;
-        content = content.replace(/ style="[^"]*"/g, "");
-        content = content.replace(/ class="[^"]*"/g, "");
-        content = content.replace(/ id="[^"]*"/g, "");
-        content = content.replace(/ dir="[^"]*"/g, "");
-        content = content.replace(/<\/?span[^>]*>/g, "");
-        content = content.replace(/<p><\/p>/g, "");
-        content = content.replace(/<p>&nbsp;<\/p>/g, "");
-        content = content.replace(/<p>/g, '<p style="margin: 0 0 10px 0;">');
-        content = content.trim();
-        content = content.replace(/(<p style="margin: 0 0 10px 0;">(&nbsp;|\s)*<\/p>| <br>|<br\/>)+$/gi, "");
-
-        const finalCode = `<div style="line-height: 1.5;">\n${content}\n</div>`;
-        document.body.removeChild(tempContainer);
-
-        const output = document.getElementById("outputEmail");
-        output.value = finalCode;
-        output.style.display = "block";
-        output.select();
-        document.execCommand("copy");
-      }
-
-      // --- ЛОГИКА TELEGRAM ---
-      function processTG() {
-        const editor = document.getElementById("editorTG");
-        
-        const tempContainer = document.createElement("div");
-        tempContainer.innerHTML = editor.innerHTML;
-        tempContainer.style.position = "fixed";
-        tempContainer.style.left = "-9999px";
-        document.body.appendChild(tempContainer);
-
-        const allNodes = Array.from(tempContainer.querySelectorAll("*"));
-        allNodes.forEach((el) => {
-          const style = window.getComputedStyle(el);
-          const isLinkColor = style.color === "rgb(17, 85, 204)" || style.color === "rgb(5, 99, 193)";
-          const hasUnderline = style.textDecoration.includes("underline");
-          
-          if (el.tagName === "A") {
-            let href = el.getAttribute("href");
-            if (href && href.includes("google.com/url?q=")) {
-              const urlParams = new URLSearchParams(href.split('?')[1]);
-              href = urlParams.get('q') || href;
+        var lines = [];
+        for (var i = 0; i < paras.length; i++) {
+          if (paras[i] === null) {
+            lines.push("<p><br></p>");
+          } else {
+            lines.push("<p>" + paras[i] + "</p>");
+            if (i < paras.length - 1) {
+              lines.push("<p><br></p>");
             }
-            while (el.attributes.length > 0) el.removeAttribute(el.attributes[0].name);
-            el.setAttribute("href", href);
-          } else if (isLinkColor && hasUnderline && el.innerText.trim().length > 3) {
-            if (!el.closest("a") && !el.querySelector("a")) {
-              const text = el.innerText.trim();
-              const link = document.createElement("a");
-              link.href = text.startsWith("http") ? text : "#";
-              link.innerHTML = el.innerHTML;
-              el.innerHTML = "";
-              el.appendChild(link);
-            }
-          }
-
-          const isBold = style.fontWeight === "700" || style.fontWeight === "bold" || parseInt(style.fontWeight) >= 700;
-          const isItalic = style.fontStyle === "italic";
-
-          if (isBold && !el.querySelector("b") && el.tagName !== "B") el.innerHTML = "<b>" + el.innerHTML + "</b>";
-          if (isItalic && !el.querySelector("i") && el.tagName !== "I") el.innerHTML = "<i>" + el.innerHTML + "</i>";
-          if (hasUnderline && !el.querySelector("u") && el.tagName !== "U" && el.tagName !== "A" && !el.closest("a")) {
-            el.innerHTML = "<u>" + el.innerHTML + "</u>";
-          }
-        });
-
-        const blocks = Array.from(tempContainer.querySelectorAll("p, li, h1, h2, h3, div"));
-        let resultArr = [];
-
-        blocks.forEach((block) => {
-          if (block.parentElement !== tempContainer && ["P", "LI", "DIV"].includes(block.parentElement.tagName)) return;
-
-          block.querySelectorAll("a").forEach(a => {
-            let href = a.getAttribute("href");
-            if (href && href.includes("google.com/url?q=")) {
-                try { const url = new URL(href); href = url.searchParams.get("q") || href; } catch(e) {}
-            }
-            while (a.attributes.length > 0) a.removeAttribute(a.attributes[0].name);
-            a.setAttribute("href", href);
-          });
-
-          let html = block.innerHTML
-            .replace(/ style="[^"]*"/g, "")
-            .replace(/ class="[^"]*"/g, "")
-            .replace(/ id="[^"]*"/g, "")
-            .replace(/ dir="[^"]*"/g, "")
-            .replace(/<\/?span[^>]*>/g, "")
-            .replace(/&nbsp;/g, " ")
-            .trim();
-
-          html = html.replace(/<b>\s*<\/b>/g, "").replace(/<u>\s*<\/u>/g, "").replace(/<i>\s*<\/i>/g, "");
-          const cleanText = html.replace(/<\/?[^>]+(>|$)/g, "").trim();
-
-          if (cleanText !== "" && html !== "<br>") {
-            if (block.tagName === "LI") html = "• " + html;
-            resultArr.push({
-              html: "<p>" + html + "</p>",
-              isStep: /Шаг\s*\d+/i.test(cleanText) || block.tagName === "LI"
-            });
-          }
-        });
-
-        let finalResult = [];
-        for (let i = 0; i < resultArr.length; i++) {
-          finalResult.push(resultArr[i].html);
-          if (i < resultArr.length - 1) {
-            const currentIsStep = resultArr[i].isStep;
-            const nextIsStep = resultArr[i+1].isStep;
-            if (!(currentIsStep && nextIsStep)) finalResult.push("<p>&nbsp;</p>");
           }
         }
+        var result = lines.join("\n");
 
-        document.body.removeChild(tempContainer);
-        const output = document.getElementById("outputTG");
-        output.value = finalResult.join("\n");
-        output.style.display = "block";
-        output.select();
-        document.execCommand("copy");
+        document.getElementById("outputEmail").value = result;
+        document.getElementById("wrapEmail").classList.add("visible");
+        copyText(result).then(function () {
+          showStatus("statusEmail");
+        });
+      }
+
+      // ── TELEGRAM ──────────────────────────────────────────────────────────────────
+      function processTG() {
+        var paras = getParagraphs(document.getElementById("editorTG"));
+        if (!paras.length) return;
+
+        var lines = [];
+        for (var i = 0; i < paras.length; i++) {
+          if (paras[i] === null) {
+            lines.push("<p>&nbsp;</p>");
+          } else {
+            lines.push("<p>" + paras[i] + "</p>");
+            if (i < paras.length - 1) {
+              lines.push("<p>&nbsp;</p>");
+            }
+          }
+        }
+        var result = lines.join("\n");
+
+        document.getElementById("outputTG").value = result;
+        document.getElementById("wrapTG").classList.add("visible");
+        copyText(result).then(function () {
+          showStatus("statusTG");
+        });
+      }
+
+      // ── ОЧИСТКА ───────────────────────────────────────────────────────────────────
+      function clearAll() {
+        if (!confirm("Очистить все поля?")) return;
+        ["editorEmail", "editorTG"].forEach(function (id) {
+          document.getElementById(id).innerHTML = "";
+        });
+        ["outputEmail", "outputTG"].forEach(function (id) {
+          document.getElementById(id).value = "";
+        });
+        ["wrapEmail", "wrapTG"].forEach(function (id) {
+          document.getElementById(id).classList.remove("visible");
+        });
       }
     </script>
   </body>
