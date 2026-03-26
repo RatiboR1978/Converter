@@ -428,68 +428,105 @@
 
       var NO_FMT = { bold: false, italic: false, underline: false };
 
-      // ── ПОЛУЧИТЬ МАССИВ АБЗАЦЕВ ───────────────────────────────────────────────────
-      function getParagraphs(editorEl) {
+      // ── ПОЛУЧИТЬ МАССИВ БЛОКОВ (абзацы + пункты списка) ─────────────────────────
+      function getBlocks(editorEl) {
         var clone = editorEl.cloneNode(true);
         var result = [];
 
-        // Берём все <p> на любом уровне вложенности
-        var pList = clone.querySelectorAll("p");
-
-        if (pList.length > 0) {
-          for (var i = 0; i < pList.length; i++) {
-            var html = childHtml(pList[i], NO_FMT).trim();
-            if (
-              !html ||
-              html === "&nbsp;" ||
-              html === "\u00A0" ||
-              html === "<br>"
-            ) {
-              result.push(null);
-            } else {
-              result.push(html);
+        function walk(node) {
+          if (node.nodeType !== 1) return;
+          var tag = node.tagName.toUpperCase();
+          if (tag === "UL" || tag === "OL") {
+            for (var i = 0; i < node.childNodes.length; i++) {
+              var child = node.childNodes[i];
+              if (
+                child.nodeType === 1 &&
+                child.tagName.toUpperCase() === "LI"
+              ) {
+                var html = childHtml(child, NO_FMT).trim();
+                if (html && html !== "&nbsp;" && html !== "\u00A0")
+                  result.push({ type: "li", content: html });
+              }
             }
+          } else if (tag === "P") {
+            var html = childHtml(node, NO_FMT).trim();
+            result.push({
+              type: "p",
+              content:
+                !html ||
+                html === "&nbsp;" ||
+                html === "\u00A0" ||
+                html === "<br>"
+                  ? null
+                  : html,
+            });
+          } else {
+            for (var i = 0; i < node.childNodes.length; i++)
+              walk(node.childNodes[i]);
           }
-        } else {
-          // Fallback: нет <p> — разбиваем по <br>
+        }
+
+        for (var i = 0; i < clone.childNodes.length; i++)
+          walk(clone.childNodes[i]);
+
+        // Fallback: нет блоков — разбиваем по <br>
+        if (!result.length) {
           var cur = "";
           for (var j = 0; j < clone.childNodes.length; j++) {
             var n = clone.childNodes[j];
             if (n.nodeType === 1 && n.tagName === "BR") {
-              result.push(cur.trim() || null);
+              result.push({ type: "p", content: cur.trim() || null });
               cur = "";
             } else {
               cur += toHtml(n, NO_FMT);
             }
           }
-          if (cur.trim()) result.push(cur.trim());
+          if (cur.trim()) result.push({ type: "p", content: cur.trim() });
         }
 
         // Убрать null по краям
-        while (result.length && result[0] === null) result.shift();
-        while (result.length && result[result.length - 1] === null)
+        while (result.length && result[0].content === null) result.shift();
+        while (result.length && result[result.length - 1].content === null)
           result.pop();
         return result;
       }
 
       // ── EMAIL ─────────────────────────────────────────────────────────────────────
       function processEmail() {
-        var paras = getParagraphs(document.getElementById("editorEmail"));
-        if (!paras.length) return;
+        var blocks = getBlocks(document.getElementById("editorEmail"));
+        if (!blocks.length) return;
 
         var lines = [];
-        for (var i = 0; i < paras.length; i++) {
-          if (paras[i] === null) {
-            lines.push("<p><br></p>");
+        var inList = false;
+        var needSep = false;
+
+        for (var i = 0; i < blocks.length; i++) {
+          var b = blocks[i];
+          if (b.type === "li") {
+            if (!inList) {
+              if (needSep) { lines.push("<p><br></p>"); needSep = false; }
+              lines.push("<ul>");
+              inList = true;
+            }
+            lines.push("<li>" + b.content + "</li>");
           } else {
-            lines.push("<p>" + paras[i] + "</p>");
-            if (i < paras.length - 1) {
-              lines.push("<p><br></p>");
+            if (inList) {
+              lines.push("</ul>");
+              inList = false;
+              needSep = true;
+            }
+            if (b.content === null) {
+              needSep = true;
+            } else {
+              if (needSep) lines.push("<p><br></p>");
+              lines.push("<p>" + b.content + "</p>");
+              needSep = true;
             }
           }
         }
-        var result = lines.join("\n");
+        if (inList) lines.push("</ul>");
 
+        var result = lines.join("\n");
         document.getElementById("outputEmail").value = result;
         document.getElementById("wrapEmail").classList.add("visible");
         copyText(result).then(function () {
@@ -499,22 +536,37 @@
 
       // ── TELEGRAM ──────────────────────────────────────────────────────────────────
       function processTG() {
-        var paras = getParagraphs(document.getElementById("editorTG"));
-        if (!paras.length) return;
+        var blocks = getBlocks(document.getElementById("editorTG"));
+        if (!blocks.length) return;
 
         var lines = [];
-        for (var i = 0; i < paras.length; i++) {
-          if (paras[i] === null) {
-            lines.push("<p>&nbsp;</p>");
+        var inList = false;
+        var needSep = false;
+
+        for (var i = 0; i < blocks.length; i++) {
+          var b = blocks[i];
+          if (b.type === "li") {
+            if (!inList) {
+              if (needSep) { lines.push("<p>&nbsp;</p>"); needSep = false; }
+              inList = true;
+            }
+            lines.push("<p>• " + b.content + "</p>");
           } else {
-            lines.push("<p>" + paras[i] + "</p>");
-            if (i < paras.length - 1) {
-              lines.push("<p>&nbsp;</p>");
+            if (inList) {
+              inList = false;
+              needSep = true;
+            }
+            if (b.content === null) {
+              needSep = true;
+            } else {
+              if (needSep) lines.push("<p>&nbsp;</p>");
+              lines.push("<p>" + b.content + "</p>");
+              needSep = true;
             }
           }
         }
-        var result = lines.join("\n");
 
+        var result = lines.join("\n");
         document.getElementById("outputTG").value = result;
         document.getElementById("wrapTG").classList.add("visible");
         copyText(result).then(function () {
